@@ -7,13 +7,14 @@ import {
 	Stack,
 	Text,
 	Heading,
+	Collapse,
 } from "@chakra-ui/react";
 import { io } from "socket.io-client";
 import AddRoomModal from "./components/AddRoomModal";
 import UsernameModal from "./components/UsernameModal";
 import Message from "./components/Message";
 
-let socket = io("http://localhost:4000");
+const socket = io("http://localhost:4000");
 
 function App() {
 	const [me, setMe] = useState({});
@@ -22,6 +23,11 @@ function App() {
 	const [users, setUsers] = useState([]);
 	const [currentRoom, setCurrentRoom] = useState(null);
 	const [messageInput, setMessageInput] = useState("");
+	const [isWriting, setIsWriting] = useState(false);
+	const [someoneElseIsWriting, setSomeoneElseIsWriting] = useState({
+		isWriting: false,
+		user: { username: null, id: null },
+	});
 
 	function handleSendMessage() {
 		socket.emit("message", { message: messageInput, to: currentRoom });
@@ -30,9 +36,9 @@ function App() {
 
 	function joinRoom(id) {
 		if (id === currentRoom) return;
-		if (currentRoom !== null) {
-			socket.emit("leave_room", currentRoom);
-		}
+		// if (currentRoom !== null) {
+		// 	socket.emit("leave_room", currentRoom);
+		// }
 		socket.emit("join_room", id);
 		setCurrentRoom(id);
 	}
@@ -42,11 +48,11 @@ function App() {
 		socket.emit("set_username", username);
 	}
 
-	function getDMs(id) {}
+	// function getDMs(id) {}
 
 	useEffect(() => {
 		socket.on("connect", () => {
-			setMe({ ...me, id: socket.id });
+			setMe((prevState) => ({ ...prevState, id: socket.id }));
 			socket.emit("ready");
 		});
 
@@ -63,12 +69,17 @@ function App() {
 			setRooms(data);
 		});
 
-		socket.on("new_user", (data) => {
+		socket.on("updated_users", (data) => {
 			setUsers(data);
 		});
 
 		socket.on("existing_messages", (data) => {
 			setMessages(data.reverse());
+		});
+
+		socket.on("is_writing", (data) => {
+			console.log(data);
+			setSomeoneElseIsWriting(data);
 		});
 
 		socket.on("disconnect", () => {
@@ -79,6 +90,10 @@ function App() {
 		});
 		return () => socket.off();
 	}, []);
+
+	useEffect(() => {
+		socket.emit("is_writing", { isWriting: isWriting, to: currentRoom });
+	}, [isWriting]);
 
 	return (
 		<div className="App">
@@ -138,16 +153,25 @@ function App() {
 						direction="column-reverse"
 						shadow="inner"
 						p={4}
-						gap={4}
 						bg="gray.50"
 						h="75vh"
 						overflowY="scroll"
 					>
+						<Collapse
+							in={someoneElseIsWriting.isWriting}
+							animateOpacity
+						>
+							<Text color="gray.500" mt={4}>
+								{someoneElseIsWriting.user.username} is
+								writing...
+							</Text>
+						</Collapse>
 						{currentRoom && messages ? (
 							messages.map((message) => (
 								<Message
+									key={`messagesList${message.id}`}
 									message={message}
-									me={message.author === me.id}
+									isMe={message.author.id === me.id}
 								/>
 							))
 						) : (
@@ -163,12 +187,18 @@ function App() {
 							resize="none"
 							value={messageInput}
 							onChange={(e) => setMessageInput(e.target.value)}
+							isDisabled={currentRoom === null}
+							onFocus={() => setIsWriting(true)}
+							onBlur={() => setIsWriting(false)}
 						/>
 						<Button
 							alignSelf="flex-end"
 							colorScheme="blue"
 							onClick={handleSendMessage}
 							flexShrink={0}
+							isDisabled={
+								currentRoom === null || messageInput === ""
+							}
 						>
 							Send
 						</Button>

@@ -1,27 +1,45 @@
-import { Box, Text, Heading } from "@chakra-ui/react";
+import { Box, Text, Heading, Flex } from "@chakra-ui/react";
 import Emoji from "react-emoji-render";
 
-function Message({ message, me }) {
+import Avatar from "boring-avatars";
+
+function Message({ message, isMe }) {
 	return (
 		<Box
-			key={`messagesList${message.id}`}
-			bg={me ? "blue.400" : "white"}
-			color={me ? "white" : "black"}
+			bg={isMe ? "blue.400" : "white"}
+			color={isMe ? "white" : "black"}
 			shadow="sm"
 			borderRadius="md"
 			borderWidth="1px"
-			borderColor={me ? "blue.500" : "gray.200"}
+			borderColor={isMe ? "blue.500" : "gray.200"}
 			maxW="80%"
 			minW="40%"
-			alignSelf={me ? "flex-end" : "flex-start"}
+			alignSelf={isMe ? "flex-end" : "flex-start"}
+			mt={4}
 		>
 			<Box
 				p={2}
 				borderBottom="1px"
-				borderColor={me ? "blue.500" : "gray.200"}
+				borderColor={isMe ? "blue.500" : "gray.200"}
 			>
-				<Heading size="sm">{message.author}</Heading>
-				<Text fontSize="xs" color={me ? "blue.100" : "gray.500"}>
+				<Flex align="center" mb={2}>
+					<Avatar
+						size={30}
+						name={message.author.id}
+						variant="beam"
+						colors={[
+							"#FFAD08",
+							"#EDD75A",
+							"#73B06F",
+							"#0C8F8F",
+							"#405059",
+						]}
+					/>
+					<Heading size="sm" ml={3}>
+						{message.author.username}
+					</Heading>
+				</Flex>
+				<Text fontSize="xs" color={isMe ? "blue.100" : "gray.500"}>
 					{message.created_at}
 				</Text>
 			</Box>
