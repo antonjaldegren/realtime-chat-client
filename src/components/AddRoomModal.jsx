@@ -6,6 +6,7 @@ import {
 	Tooltip,
 	FormControl,
 	FormLabel,
+	FormErrorMessage,
 	Modal,
 	ModalOverlay,
 	ModalContent,
@@ -13,17 +14,14 @@ import {
 	ModalFooter,
 	ModalBody,
 	ModalCloseButton,
-	useDisclosure,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
-function AddRoomModal({ joinRoom }) {
-	const { isOpen, onOpen, onClose } = useDisclosure();
+function AddRoomModal({ isOpen, onOpen, onClose, createRoom, isError }) {
 	const [input, setInput] = useState("");
 
 	function handleCreate() {
-		joinRoom(input);
-		onClose();
+		createRoom(input);
 	}
 
 	return (
@@ -44,7 +42,7 @@ function AddRoomModal({ joinRoom }) {
 					<ModalCloseButton />
 
 					<ModalBody>
-						<FormControl>
+						<FormControl isInvalid={isError}>
 							<FormLabel htmlFor="roomName">Room name</FormLabel>
 							<Input
 								id="roomName"
@@ -52,6 +50,9 @@ function AddRoomModal({ joinRoom }) {
 								value={input}
 								onChange={(e) => setInput(e.target.value)}
 							/>
+							<FormErrorMessage>
+								Room already exists
+							</FormErrorMessage>
 						</FormControl>
 					</ModalBody>
 

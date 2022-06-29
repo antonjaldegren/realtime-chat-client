@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import {
 	Textarea,
 	Button,
+	ButtonGroup,
+	IconButton,
 	Flex,
 	Box,
 	Stack,
 	Text,
 	Heading,
 	Collapse,
+	useDisclosure,
 } from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
 import { io } from "socket.io-client";
 import AddRoomModal from "./components/AddRoomModal";
 import UsernameModal from "./components/UsernameModal";
@@ -28,19 +32,29 @@ function App() {
 		isWriting: false,
 		user: { username: null, id: null },
 	});
+	const [errors, setErrors] = useState({
+		create_room: false,
+		message: false,
+	});
+	const { isOpen, onOpen, onClose } = useDisclosure();
 
 	function handleSendMessage() {
-		socket.emit("message", { message: messageInput, to: currentRoom });
+		socket.emit("message", { message: messageInput, room_id: currentRoom });
 		setMessageInput("");
+	}
+
+	function createRoom(id) {
+		socket.emit("create_room", id);
 	}
 
 	function joinRoom(id) {
 		if (id === currentRoom) return;
-		// if (currentRoom !== null) {
-		// 	socket.emit("leave_room", currentRoom);
-		// }
 		socket.emit("join_room", id);
 		setCurrentRoom(id);
+	}
+
+	function removeRoom(id) {
+		socket.emit("remove_room", id);
 	}
 
 	function postUsername(username) {
@@ -48,12 +62,9 @@ function App() {
 		socket.emit("set_username", username);
 	}
 
-	// function getDMs(id) {}
-
 	useEffect(() => {
 		socket.on("connect", () => {
 			setMe((prevState) => ({ ...prevState, id: socket.id }));
-			socket.emit("ready");
 		});
 
 		socket.on("initial_data", (data) => {
@@ -65,7 +76,9 @@ function App() {
 			setMessages((prevState) => [data, ...prevState]);
 		});
 
-		socket.on("new_room", (data) => {
+		socket.on("updated_rooms", (data) => {
+			if (data.findIndex((room) => room.id === currentRoom) === -1)
+				setCurrentRoom(null);
 			setRooms(data);
 		});
 
@@ -80,6 +93,14 @@ function App() {
 		socket.on("is_writing", (data) => {
 			console.log(data);
 			setSomeoneElseIsWriting(data);
+		});
+
+		socket.on("create_room_status", (data) => {
+			setErrors((prevState) => ({
+				...prevState,
+				create_room: data.error,
+			}));
+			if (!data.error) onClose();
 		});
 
 		socket.on("disconnect", () => {
@@ -124,20 +145,33 @@ function App() {
 					<Stack>
 						<Flex justify="space-between">
 							<Heading size="lg">Rooms</Heading>
-							<AddRoomModal joinRoom={joinRoom} />
+							<AddRoomModal
+								isOpen={isOpen}
+								onOpen={onOpen}
+								onClose={onClose}
+								createRoom={createRoom}
+								isError={errors.create_room}
+							/>
 						</Flex>
 						{rooms.length ? (
-							rooms.map((room) => (
-								<Button
-									key={`roomsList${room.id}`}
-									colorScheme="blue"
-									variant="ghost"
-									isActive={room.id === currentRoom}
-									justifyContent="flex-start"
-									onClick={() => joinRoom(room.id)}
-								>
-									{room.id}
-								</Button>
+							rooms.map(({ id, name }) => (
+								<ButtonGroup isAttached key={`roomsList${id}`}>
+									<Button
+										colorScheme="blue"
+										variant="outline"
+										isActive={id === currentRoom}
+										justifyContent="flex-start"
+										onClick={() => joinRoom(id)}
+									>
+										{name}
+									</Button>
+									<IconButton
+										colorScheme="blue"
+										variant="outline"
+										icon={<DeleteIcon />}
+										onClick={() => removeRoom(id)}
+									/>
+								</ButtonGroup>
 							))
 						) : (
 							<Text>No rooms added</Text>
@@ -157,25 +191,27 @@ function App() {
 						h="75vh"
 						overflowY="scroll"
 					>
-						<Collapse
-							in={someoneElseIsWriting.isWriting}
-							animateOpacity
-						>
-							<Text color="gray.500" mt={4}>
-								{someoneElseIsWriting.user.username} is
-								writing...
-							</Text>
-						</Collapse>
-						{currentRoom && messages ? (
+						<div>
+							<Collapse
+								in={someoneElseIsWriting.isWriting}
+								animateOpacity
+							>
+								<Text color="gray.500" mt={4}>
+									{someoneElseIsWriting.username} is
+									writing...
+								</Text>
+							</Collapse>
+						</div>
+						{currentRoom ? (
 							messages.map((message) => (
 								<Message
 									key={`messagesList${message.id}`}
 									message={message}
-									isMe={message.author.id === me.id}
+									isMe={message.author_id === me.id}
 								/>
 							))
 						) : (
-							<Text>Please pick a room or user in the list</Text>
+							<Text>Please pick a room in the list</Text>
 						)}
 					</Flex>
 

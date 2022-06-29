@@ -25,7 +25,7 @@ function Message({ message, isMe }) {
 				<Flex align="center" mb={2}>
 					<Avatar
 						size={30}
-						name={message.author.id}
+						name={message.author_id}
 						variant="beam"
 						colors={[
 							"#FFAD08",
@@ -36,7 +36,7 @@ function Message({ message, isMe }) {
 						]}
 					/>
 					<Heading size="sm" ml={3}>
-						{message.author.username}
+						{message.author_username}
 					</Heading>
 				</Flex>
 				<Text fontSize="xs" color={isMe ? "blue.100" : "gray.500"}>
@@ -44,7 +44,8 @@ function Message({ message, isMe }) {
 				</Text>
 			</Box>
 			<Text p={3}>
-				<Emoji text={message.message} />
+				{/* <Emoji text={message.message} /> */}
+				{message.message}
 			</Text>
 		</Box>
 	);
