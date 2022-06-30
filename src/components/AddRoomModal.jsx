@@ -17,11 +17,11 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
-function AddRoomModal({ isOpen, onOpen, onClose, createRoom, isError }) {
+function AddRoomModal({ isOpen, onOpen, onClose, handleCreateRoom, isError }) {
 	const [input, setInput] = useState("");
 
 	function handleCreate() {
-		createRoom(input);
+		handleCreateRoom(input);
 	}
 
 	return (

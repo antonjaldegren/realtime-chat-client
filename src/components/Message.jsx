@@ -40,12 +40,11 @@ function Message({ message, isMe }) {
 					</Heading>
 				</Flex>
 				<Text fontSize="xs" color={isMe ? "blue.100" : "gray.500"}>
-					{message.created_at}
+					{new Date(message.created_at).toLocaleString()}
 				</Text>
 			</Box>
 			<Text p={3}>
-				{/* <Emoji text={message.message} /> */}
-				{message.message}
+				<Emoji text={message.message} />
 			</Text>
 		</Box>
 	);

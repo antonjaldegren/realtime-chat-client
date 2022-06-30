@@ -13,7 +13,7 @@ import {
 	useDisclosure,
 } from "@chakra-ui/react";
 
-function UsernameModal({ postUsername }) {
+function UsernameModal({ handleSetUsername }) {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const ref = useRef();
 	const [username, setUsername] = useState("");
@@ -21,7 +21,7 @@ function UsernameModal({ postUsername }) {
 	useEffect(() => onOpen(), []);
 
 	function handleSave() {
-		postUsername(username);
+		handleSetUsername(username);
 		onClose();
 	}
 

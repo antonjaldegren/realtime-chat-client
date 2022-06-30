@@ -2,21 +2,23 @@ import { useState, useEffect } from "react";
 import {
 	Textarea,
 	Button,
-	ButtonGroup,
-	IconButton,
 	Flex,
 	Box,
 	Stack,
 	Text,
 	Heading,
-	Collapse,
+	FormControl,
 	useDisclosure,
+	FormErrorMessage,
+	Divider,
 } from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
 import { io } from "socket.io-client";
 import AddRoomModal from "./components/AddRoomModal";
 import UsernameModal from "./components/UsernameModal";
 import Message from "./components/Message";
+import Room from "./components/Room";
+import { getActiveUsers } from "./utils";
+import WritingIndicator from "./components/WritingIndicator";
 
 const socket = io("http://localhost:4000");
 
@@ -27,11 +29,6 @@ function App() {
 	const [users, setUsers] = useState([]);
 	const [currentRoom, setCurrentRoom] = useState(null);
 	const [messageInput, setMessageInput] = useState("");
-	const [isWriting, setIsWriting] = useState(false);
-	const [someoneElseIsWriting, setSomeoneElseIsWriting] = useState({
-		isWriting: false,
-		user: { username: null, id: null },
-	});
 	const [errors, setErrors] = useState({
 		create_room: false,
 		message: false,
@@ -43,23 +40,30 @@ function App() {
 		setMessageInput("");
 	}
 
-	function createRoom(id) {
+	function handleCreateRoom(id) {
 		socket.emit("create_room", id);
 	}
 
-	function joinRoom(id) {
+	function handleJoinRoom(id) {
 		if (id === currentRoom) return;
-		socket.emit("join_room", id);
 		setCurrentRoom(id);
+		socket.emit("join_room", id);
 	}
 
-	function removeRoom(id) {
+	function handleRemoveRoom(id) {
 		socket.emit("remove_room", id);
 	}
 
-	function postUsername(username) {
+	function handleSetUsername(username) {
 		setMe({ ...me, username });
 		socket.emit("set_username", username);
+	}
+
+	function handleIsWriting(isWriting) {
+		socket.emit("is_writing", {
+			isWriting,
+			room_id: currentRoom,
+		});
 	}
 
 	useEffect(() => {
@@ -77,8 +81,11 @@ function App() {
 		});
 
 		socket.on("updated_rooms", (data) => {
-			if (data.findIndex((room) => room.id === currentRoom) === -1)
-				setCurrentRoom(null);
+			setCurrentRoom((prevState) =>
+				data.findIndex((room) => room.id === prevState) === -1
+					? null
+					: prevState
+			);
 			setRooms(data);
 		});
 
@@ -90,58 +97,27 @@ function App() {
 			setMessages(data.reverse());
 		});
 
-		socket.on("is_writing", (data) => {
-			console.log(data);
-			setSomeoneElseIsWriting(data);
-		});
-
-		socket.on("create_room_status", (data) => {
+		socket.on("error_status", (data) => {
 			setErrors((prevState) => ({
 				...prevState,
-				create_room: data.error,
+				...data,
 			}));
-			if (!data.error) onClose();
+			if (!data.create_room) onClose();
 		});
 
 		socket.on("disconnect", () => {
 			setCurrentRoom(null);
 			setMessages([]);
 			setUsers([]);
-			console.log("Disconnected from server");
 		});
 		return () => socket.off();
 	}, []);
 
-	useEffect(() => {
-		socket.emit("is_writing", { isWriting: isWriting, to: currentRoom });
-	}, [isWriting]);
-
 	return (
 		<div className="App">
-			<UsernameModal postUsername={postUsername} />
+			<UsernameModal handleSetUsername={handleSetUsername} />
 			<Flex>
-				<Stack w="20%" p={4} gap={5}>
-					<Stack>
-						<Heading size="lg">Users</Heading>
-						{users.length ? (
-							users.map((user) => (
-								<Button
-									key={`usersList${user.id}`}
-									colorScheme="blue"
-									variant="ghost"
-									isActive={user.id === currentRoom}
-									disabled={user.id === me.id}
-									justifyContent="flex-start"
-									onClick={() => getDMs(user.id)}
-								>
-									{user.username || "Anonymous"}{" "}
-									{user.id === me.id && "(me)"}
-								</Button>
-							))
-						) : (
-							<Text>No users online</Text>
-						)}
-					</Stack>
+				<Stack w="20%" p={4} gap={5} h="100vh" overflowY="scroll">
 					<Stack>
 						<Flex justify="space-between">
 							<Heading size="lg">Rooms</Heading>
@@ -149,32 +125,28 @@ function App() {
 								isOpen={isOpen}
 								onOpen={onOpen}
 								onClose={onClose}
-								createRoom={createRoom}
+								handleCreateRoom={handleCreateRoom}
 								isError={errors.create_room}
 							/>
 						</Flex>
+						<Divider />
 						{rooms.length ? (
 							rooms.map(({ id, name }) => (
-								<ButtonGroup isAttached key={`roomsList${id}`}>
-									<Button
-										colorScheme="blue"
-										variant="outline"
-										isActive={id === currentRoom}
-										justifyContent="flex-start"
-										onClick={() => joinRoom(id)}
-									>
-										{name}
-									</Button>
-									<IconButton
-										colorScheme="blue"
-										variant="outline"
-										icon={<DeleteIcon />}
-										onClick={() => removeRoom(id)}
-									/>
-								</ButtonGroup>
+								<Room
+									key={`roomsList${id}`}
+									activeUsers={getActiveUsers(id, users)}
+									name={name}
+									id={id}
+									isCurrentRoom={id === currentRoom}
+									handleJoinRoom={() => handleJoinRoom(id)}
+									handleRemoveRoom={() =>
+										handleRemoveRoom(id)
+									}
+									me={me}
+								/>
 							))
 						) : (
-							<Text>No rooms added</Text>
+							<Text color="gray.400">No rooms added</Text>
 						)}
 					</Stack>
 				</Stack>
@@ -191,17 +163,14 @@ function App() {
 						h="75vh"
 						overflowY="scroll"
 					>
-						<div>
-							<Collapse
-								in={someoneElseIsWriting.isWriting}
-								animateOpacity
-							>
-								<Text color="gray.500" mt={4}>
-									{someoneElseIsWriting.username} is
-									writing...
-								</Text>
-							</Collapse>
-						</div>
+						<WritingIndicator
+							writingUsers={users.filter(
+								(user) =>
+									user.isWriting &&
+									user.currentRoom === currentRoom &&
+									user.id !== me.id
+							)}
+						/>
 						{currentRoom ? (
 							messages.map((message) => (
 								<Message
@@ -211,30 +180,37 @@ function App() {
 								/>
 							))
 						) : (
-							<Text>Please pick a room in the list</Text>
+							<Text color="gray.400">
+								Please pick a room in the list
+							</Text>
 						)}
 					</Flex>
 
 					<Flex direction="column" h="25vh" py={5} pr={4} bg="white">
-						<Textarea
-							h="100%"
-							mb={3}
-							placeholder="Enter message here"
-							resize="none"
-							value={messageInput}
-							onChange={(e) => setMessageInput(e.target.value)}
-							isDisabled={currentRoom === null}
-							onFocus={() => setIsWriting(true)}
-							onBlur={() => setIsWriting(false)}
-						/>
+						<FormControl isInvalid={errors.message} flex={1}>
+							<Textarea
+								h="100%"
+								placeholder="Enter message here"
+								resize="none"
+								value={messageInput}
+								onChange={(e) =>
+									setMessageInput(e.target.value)
+								}
+								isDisabled={currentRoom === null}
+								onFocus={() => handleIsWriting(true)}
+								onBlur={() => handleIsWriting(false)}
+							/>
+							<FormErrorMessage>
+								You can't send an empty message!
+							</FormErrorMessage>
+						</FormControl>
 						<Button
+							mt={3}
 							alignSelf="flex-end"
 							colorScheme="blue"
 							onClick={handleSendMessage}
 							flexShrink={0}
-							isDisabled={
-								currentRoom === null || messageInput === ""
-							}
+							isDisabled={currentRoom === null}
 						>
 							Send
 						</Button>
