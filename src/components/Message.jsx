@@ -40,7 +40,7 @@ function Message({ message, isMe }) {
 					</Heading>
 				</Flex>
 				<Text fontSize="xs" color={isMe ? "blue.100" : "gray.500"}>
-					{new Date(message.created_at).toLocaleString()}
+					{new Date(parseInt(message.created_at)).toLocaleString()}
 				</Text>
 			</Box>
 			<Text p={3}>

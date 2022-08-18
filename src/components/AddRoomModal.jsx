@@ -35,7 +35,11 @@ function AddRoomModal({ isOpen, onOpen, onClose, handleCreateRoom, isError }) {
 				/>
 			</Tooltip>
 
-			<Modal isOpen={isOpen} onClose={onClose}>
+			<Modal
+				isOpen={isOpen}
+				onClose={onClose}
+				onCloseComplete={() => setInput("")}
+			>
 				<ModalOverlay />
 				<ModalContent>
 					<ModalHeader>Create new room</ModalHeader>

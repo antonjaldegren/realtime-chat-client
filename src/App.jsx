@@ -3,22 +3,22 @@ import {
 	Textarea,
 	Button,
 	Flex,
-	Box,
-	Stack,
+	Hide,
 	Text,
-	Heading,
+	Box,
+	Badge,
+	HStack,
 	FormControl,
 	useDisclosure,
 	FormErrorMessage,
-	Divider,
 } from "@chakra-ui/react";
 import { io } from "socket.io-client";
-import AddRoomModal from "./components/AddRoomModal";
 import UsernameModal from "./components/UsernameModal";
 import Message from "./components/Message";
-import Room from "./components/Room";
-import { getActiveUsers } from "./utils";
 import WritingIndicator from "./components/WritingIndicator";
+import Rooms from "./components/Rooms";
+import MyDrawer from "./components/MyDrawer";
+import AddRoomModal from "./components/AddRoomModal";
 
 const socket = io(import.meta.env.VITE_SERVER_URL);
 
@@ -40,20 +40,6 @@ function App() {
 		setMessageInput("");
 	}
 
-	function handleCreateRoom(id) {
-		socket.emit("create_room", id);
-	}
-
-	function handleJoinRoom(id) {
-		if (id === currentRoom) return;
-		setCurrentRoom(id);
-		socket.emit("join_room", id);
-	}
-
-	function handleRemoveRoom(id) {
-		socket.emit("remove_room", id);
-	}
-
 	function handleSetUsername(username) {
 		setMe({ ...me, username });
 		socket.emit("set_username", username);
@@ -64,6 +50,10 @@ function App() {
 			isWriting,
 			room_id: currentRoom,
 		});
+	}
+
+	function handleCreateRoom(id) {
+		socket.emit("create_room", id);
 	}
 
 	useEffect(() => {
@@ -114,43 +104,29 @@ function App() {
 	}, []);
 
 	return (
-		<div className="App">
+		<Flex h="100vh" className="App">
 			<UsernameModal handleSetUsername={handleSetUsername} />
-			<Flex>
-				<Stack w="20%" p={4} gap={5} h="100vh" overflowY="scroll">
-					<Stack>
-						<Flex justify="space-between">
-							<Heading size="lg">Rooms</Heading>
-							<AddRoomModal
-								isOpen={isOpen}
-								onOpen={onOpen}
-								onClose={onClose}
-								handleCreateRoom={handleCreateRoom}
-								isError={errors.create_room}
-							/>
-						</Flex>
-						<Divider />
-						{rooms.length ? (
-							rooms.map(({ id, name }) => (
-								<Room
-									key={`roomsList${id}`}
-									activeUsers={getActiveUsers(id, users)}
-									name={name}
-									id={id}
-									isCurrentRoom={id === currentRoom}
-									handleJoinRoom={() => handleJoinRoom(id)}
-									handleRemoveRoom={() =>
-										handleRemoveRoom(id)
-									}
-									me={me}
-								/>
-							))
-						) : (
-							<Text color="gray.400">No rooms added</Text>
-						)}
-					</Stack>
-				</Stack>
-				<Box h="100vh" flex={1}>
+
+			<Flex flex={1}>
+				<Hide below="md">
+					<Box w={{ md: "275px", lg: "350px" }}>
+						<Rooms
+							me={me}
+							rooms={rooms}
+							users={users}
+							currentRoom={currentRoom}
+							setCurrentRoom={setCurrentRoom}
+							handleCreateRoom={handleCreateRoom}
+							socket={socket}
+							roomError={errors.create_room}
+							isOpen={isOpen}
+							onOpen={onOpen}
+							onClose={onClose}
+							withHeader
+						/>
+					</Box>
+				</Hide>
+				<Flex direction="column" flex={1} w="0" ml={3}>
 					<Flex
 						borderLeft="1px"
 						borderBottom="1px"
@@ -160,8 +136,8 @@ function App() {
 						shadow="inner"
 						p={4}
 						bg="gray.50"
-						h="75vh"
-						overflowY="scroll"
+						flex={1}
+						overflowY="auto"
 					>
 						<WritingIndicator
 							writingUsers={users.filter(
@@ -181,15 +157,29 @@ function App() {
 							))
 						) : (
 							<Text color="gray.400">
-								Please pick a room in the list
+								Enter a room to start chatting!
 							</Text>
 						)}
 					</Flex>
-
-					<Flex direction="column" h="25vh" py={5} pr={4} bg="white">
+					<Flex direction="column" gap={3} py={4} pr={4} bg="white">
+						<Hide above="md">
+							{currentRoom && (
+								<small>
+									Current room:{"  "}
+									<Badge colorScheme="blue">
+										{
+											rooms.find(
+												(room) =>
+													room.id === currentRoom
+											).name
+										}
+									</Badge>
+								</small>
+							)}
+						</Hide>
 						<FormControl isInvalid={errors.message} flex={1}>
 							<Textarea
-								h="100%"
+								h="125px"
 								placeholder="Enter message here"
 								resize="none"
 								value={messageInput}
@@ -204,20 +194,45 @@ function App() {
 								You can't send an empty message!
 							</FormErrorMessage>
 						</FormControl>
-						<Button
-							mt={3}
-							alignSelf="flex-end"
-							colorScheme="blue"
-							onClick={handleSendMessage}
-							flexShrink={0}
-							isDisabled={currentRoom === null}
-						>
-							Send
-						</Button>
+						<Flex direction="row-reverse" justify="space-between">
+							<Button
+								colorScheme="blue"
+								onClick={handleSendMessage}
+								isDisabled={currentRoom === null}
+							>
+								Send
+							</Button>
+							<Hide above="md">
+								<HStack>
+									<MyDrawer buttonTitle="Rooms">
+										<Rooms
+											me={me}
+											rooms={rooms}
+											users={users}
+											currentRoom={currentRoom}
+											setCurrentRoom={setCurrentRoom}
+											handleCreateRoom={handleCreateRoom}
+											socket={socket}
+											roomError={errors.create_room}
+											isOpen={isOpen}
+											onOpen={onOpen}
+											onClose={onClose}
+										/>
+									</MyDrawer>
+									<AddRoomModal
+										isOpen={isOpen}
+										onOpen={onOpen}
+										onClose={onClose}
+										handleCreateRoom={handleCreateRoom}
+										isError={errors.create_room}
+									/>
+								</HStack>
+							</Hide>
+						</Flex>
 					</Flex>
-				</Box>
+				</Flex>
 			</Flex>
-		</div>
+		</Flex>
 	);
 }
 
