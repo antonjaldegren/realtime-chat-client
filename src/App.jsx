@@ -20,7 +20,7 @@ import Room from "./components/Room";
 import { getActiveUsers } from "./utils";
 import WritingIndicator from "./components/WritingIndicator";
 
-const socket = io(process.env.REACT_APP_SERVER_URL);
+const socket = io(import.meta.env.VITE_SERVER_URL);
 
 function App() {
 	const [me, setMe] = useState({});
