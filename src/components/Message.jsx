@@ -1,4 +1,4 @@
-import { Box, Text, Heading, Flex } from "@chakra-ui/react";
+import React, { Box, Text, Heading, Flex } from "@chakra-ui/react";
 import Emoji from "react-emoji-render";
 
 import Avatar from "boring-avatars";

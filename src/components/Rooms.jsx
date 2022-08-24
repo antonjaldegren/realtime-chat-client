@@ -1,11 +1,5 @@
-import {
-	Flex,
-	Box,
-	Stack,
-	Text,
-	Heading,
-	useDisclosure,
-} from "@chakra-ui/react";
+import React from "react";
+import { Flex, Box, Stack, Text, Heading } from "@chakra-ui/react";
 import AddRoomModal from "./AddRoomModal";
 import Room from "./Room";
 

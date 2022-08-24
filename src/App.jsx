@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	Textarea,
 	Button,
@@ -191,7 +191,7 @@ function App() {
 								onBlur={() => handleIsWriting(false)}
 							/>
 							<FormErrorMessage>
-								You can't send an empty message!
+								You can&apos;t send an empty message!
 							</FormErrorMessage>
 						</FormControl>
 						<Flex direction="row-reverse" justify="space-between">
