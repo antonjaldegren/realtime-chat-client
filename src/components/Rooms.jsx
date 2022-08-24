@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { Flex, Box, Stack, Text, Heading } from "@chakra-ui/react";
 import AddRoomModal from "./AddRoomModal";
 import Room from "./Room";
@@ -84,5 +85,19 @@ function Rooms({
 		</Box>
 	);
 }
+
+Rooms.propTypes = {
+	me: PropTypes.object,
+	rooms: PropTypes.array,
+	users: PropTypes.array,
+	currentRoom: PropTypes.string,
+	setCurrentRoom: PropTypes.func,
+	socket: PropTypes.object,
+	roomError: PropTypes.bool,
+	isOpen: PropTypes.bool,
+	onOpen: PropTypes.func,
+	onClose: PropTypes.func,
+	withHeader: PropTypes.bool,
+};
 
 export default Rooms;

@@ -1,6 +1,7 @@
-import React, { Box, Text, Heading, Flex } from "@chakra-ui/react";
+import React from "react";
+import { Box, Text, Heading, Flex } from "@chakra-ui/react";
+import PropTypes from "prop-types";
 import Emoji from "react-emoji-render";
-
 import Avatar from "boring-avatars";
 
 function Message({ message, isMe }) {
@@ -49,5 +50,10 @@ function Message({ message, isMe }) {
 		</Box>
 	);
 }
+
+Message.propTypes = {
+	message: PropTypes.object,
+	isMe: PropTypes.bool,
+};
 
 export default Message;

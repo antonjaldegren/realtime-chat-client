@@ -1,3 +1,5 @@
+import React from "react";
+import PropTypes from "prop-types";
 import {
 	Button,
 	IconButton,
@@ -77,5 +79,14 @@ function Room({
 		</>
 	);
 }
+
+Room.propTypes = {
+	activeUsers: PropTypes.array,
+	handleJoinRoom: PropTypes.func,
+	handleRemoveRoom: PropTypes.func,
+	isCurrentRoom: PropTypes.bool,
+	name: PropTypes.string,
+	me: PropTypes.object,
+};
 
 export default Room;

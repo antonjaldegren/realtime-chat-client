@@ -1,3 +1,5 @@
+import React from "react";
+import PropTypes from "prop-types";
 import { Text, Collapse } from "@chakra-ui/react";
 
 function WritingIndicator({ writingUsers }) {
@@ -31,5 +33,9 @@ function WritingIndicator({ writingUsers }) {
 		</div>
 	);
 }
+
+WritingIndicator.propTypes = {
+	writingUsers: PropTypes.array,
+};
 
 export default WritingIndicator;

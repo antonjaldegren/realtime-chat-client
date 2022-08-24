@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import {
 	Button,
 	Drawer,
@@ -32,5 +33,10 @@ function MyDrawer({ children, buttonTitle }) {
 		</>
 	);
 }
+
+MyDrawer.propTypes = {
+	children: PropTypes.element,
+	buttonTitle: PropTypes.string,
+};
 
 export default MyDrawer;

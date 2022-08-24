@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PropTypes from "prop-types";
 import {
 	Button,
 	IconButton,
@@ -77,5 +78,13 @@ function AddRoomModal({ isOpen, onOpen, onClose, handleCreateRoom, isError }) {
 		</>
 	);
 }
+
+AddRoomModal.propTypes = {
+	isOpen: PropTypes.bool,
+	onOpen: PropTypes.func,
+	onClose: PropTypes.func,
+	handleCreateRoom: PropTypes.func,
+	isError: PropTypes.bool,
+};
 
 export default AddRoomModal;

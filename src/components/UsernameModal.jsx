@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import PropTypes from "prop-types";
 import {
 	AlertDialog,
 	AlertDialogBody,
@@ -73,5 +74,9 @@ function UsernameModal({ handleSetUsername }) {
 		</>
 	);
 }
+
+UsernameModal.propTypes = {
+	handleSetUsername: PropTypes.func,
+};
 
 export default UsernameModal;
