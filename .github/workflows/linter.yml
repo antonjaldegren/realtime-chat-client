@@ -1,4 +1,5 @@
 name: CI
+
 on:
     push:
         branches: ["main"]
@@ -6,13 +7,13 @@ on:
         branches: ["main"]
 
 jobs:
-    build:
+    lint:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
             - name: "Sätter upp Node v16 i vårt Workflow"
-                uses: actions/setup-node@v3
-                with:
-                    node-version: 16
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 16
             - run: "npm install"
             - run: "npx eslint src/**/*.jsx"
