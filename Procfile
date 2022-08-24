@@ -1,1 +1,0 @@
-release: npx vite build
